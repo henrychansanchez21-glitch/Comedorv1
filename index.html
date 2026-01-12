@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaborPro Elite v6 - Firebase Cloud</title>
+    <title>SaborPro Elite - ComedorV1</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
 
     <style>
         :root {
@@ -18,9 +19,10 @@
 
         /* --- MENÚ SOPORTE --- */
         .support-menu-container { position: fixed; top: 15px; right: 15px; z-index: 9999; }
-        .three-dots-btn { background: rgba(255,255,255,0.2); color: white; border: none; font-size: 1.8rem; cursor: pointer; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .support-dropdown { position: absolute; top: 55px; right: 0; background: white; width: 200px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow: hidden; }
+        .three-dots-btn { background: rgba(255,255,255,0.2); color: white; border: none; font-size: 1.8rem; cursor: pointer; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .support-dropdown { position: absolute; top: 55px; right: 0; background: white; width: 220px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow: hidden; }
         .support-dropdown div { padding: 12px 20px; display: block; color: #333; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+        .support-dropdown div:hover { background: #f8f9fa; }
 
         /* --- PANTALLAS --- */
         #role-selector, #login-screen {
@@ -28,27 +30,33 @@
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); text-align: center;
         }
         .roles-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .role-card { background: var(--white); padding: 30px; width: 150px; border-radius: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .role-card { background: var(--white); padding: 30px; width: 140px; border-radius: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
         .role-card i { font-size: 3rem; display: block; margin-bottom: 10px; }
 
-        .app-container { display: none; padding: 20px; max-width: 1100px; margin: auto; }
+        .app-container { display: none; padding: 20px; max-width: 1100px; margin: auto; animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; }
 
         .card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
         .total-box { background: var(--primary); color: white; padding: 30px; border-radius: 25px; text-align: center; margin-bottom: 25px; }
         .total-box p { font-size: 3rem; margin: 10px 0; font-weight: 600; color: var(--accent); }
 
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: inherit; }
+        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
+
+        .admin-item-card { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #eee; }
+        .btn-edit { background: #e3f2fd; color: #1976d2; border: none; padding: 8px; border-radius: 8px; cursor: pointer; margin-right: 5px; }
+        .btn-delete { background: #ffebee; color: #c62828; border: none; padding: 8px; border-radius: 8px; cursor: pointer; }
         
-        /* GESTIÓN */
-        .admin-item-card { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 10px; }
         .category-header { background: #e9ecef; padding: 10px 20px; border-radius: 10px; margin: 20px 0 10px; font-weight: 600; border-left: 5px solid var(--accent); }
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
         .menu-item { background: #fff; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
+        
+        .qty-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; margin-right: 5px; }
         .sale-card { border-left: 8px solid var(--success); display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
     </style>
 </head>
@@ -57,14 +65,14 @@
     <div class="support-menu-container">
         <button class="three-dots-btn" id="dots-btn" onclick="toggleSupport(event)">⋮</button>
         <div class="support-dropdown" id="support-dropdown">
-            <div onclick="alert('Llamando a soporte...')">📞 Soporte Técnico</div>
-            <div onclick="prompt('Reporte error:')">🐛 Reportar Error</div>
-            <div onclick="alert('SaborPro Cloud v6')">ℹ️ Info Versión</div>
+            <div onclick="contactSupport()">📞 Soporte Técnico</div>
+            <div onclick="reportBug()">🐛 Reportar un Error</div>
+            <div onclick="showUserInfo()">👤 Mi Usuario / ID</div>
         </div>
     </div>
 
     <div id="role-selector">
-        <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px;">SaborPro Cloud</h1>
+        <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px;">SaborPro Elite</h1>
         <div class="roles-container">
             <div class="role-card" onclick="checkJefeAccess()"><i>👨‍💼</i><span>Panel Jefe</span></div>
             <div class="role-card" onclick="openApp('mesero')"><i>🏃</i><span>Panel Mesero</span></div>
@@ -75,10 +83,8 @@
     <div id="login-screen" style="display:none">
         <div class="card" style="width: 320px;">
             <h2 id="login-title">Acceso Jefe</h2>
-            <input type="text" id="user-auth" placeholder="Escribe tu Usuario">
-            <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 10px; margin: 10px 0; cursor: pointer;">
-                <input type="checkbox" id="remember-me" style="width: 18px; height: 18px;"> Recordar usuario
-            </label>
+            <input type="email" id="auth-email" placeholder="Correo electrónico">
+            <input type="password" id="auth-password" placeholder="Contraseña">
             <button class="btn-action btn-primary" onclick="handleAuth()">Ingresar</button>
             <button class="btn-action" style="background:none; color:#666; margin-top:5px;" onclick="closeApp()">Regresar</button>
         </div>
@@ -86,41 +92,50 @@
 
     <div id="main-app" class="app-container">
         <header>
-            <h2 id="panel-title" style="color:var(--primary);">PANEL</h2>
+            <h2 id="panel-title" style="color:var(--primary); font-weight:600; margin:0;">PANEL</h2>
             <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
         </header>
 
         <div id="panel-jefe" class="role-content">
-            <div class="total-box"><h3 style="margin:0;">CAJA HOY</h3><p id="grandTotalDisplay">Q0.00</p></div>
+            <div class="total-box">
+                <h3 style="margin:0; opacity:0.9; font-weight:300;">RECAUDACIÓN DEL DÍA</h3>
+                <p id="grandTotalDisplay">Q0.00</p>
+                <button onclick="clearAllSales()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 15px; border-radius:8px; cursor:pointer; font-size: 0.8rem;">Reiniciar Caja</button>
+            </div>
             <div class="card">
                 <h3>🍴 Nuevo Producto</h3>
                 <input type="text" id="j-nombre" placeholder="Nombre">
-                <input type="number" id="j-precio" placeholder="Precio Q">
-                <select id="j-categoria">
-                    <option value="Comidas">Comidas</option><option value="Bebidas">Bebidas</option><option value="Postres">Postres</option>
-                </select>
-                <button class="btn-action btn-primary" onclick="addMenuJefe()">Agregar</button>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="j-precio" placeholder="Precio Q">
+                    <select id="j-categoria">
+                        <option value="Comidas">Comidas</option>
+                        <option value="Bebidas">Bebidas</option>
+                        <option value="Postres">Postres</option>
+                    </select>
+                </div>
+                <button class="btn-action btn-primary" onclick="addMenuJefe()" style="margin-top: 10px;">Agregar al Menú</button>
             </div>
-            <div class="card"><h3>📋 Gestión</h3><div id="j-menu-list-container"></div></div>
-            <div class="card"><h3>📊 Ventas</h3><div id="j-historial"></div></div>
+            <div class="card"><h3>📋 Gestión del Menú</h3><div id="j-menu-list-container"></div></div>
+            <div class="card"><h3>📊 Historial de Ventas</h3><div id="j-historial"></div></div>
         </div>
 
         <div id="panel-mesero" class="role-content">
             <div class="card"><input type="number" id="m-mesa" placeholder="Mesa #"></div>
             <div id="m-menu-display"></div>
-            <div class="card"><h3>🛒 Pedido</h3><div id="m-cart-display"></div>
-                <button class="btn-action btn-success" onclick="sendToKitchen()">ENVIAR A COCINA</button>
+            <div class="card" style="margin-top:20px; border-top: 5px solid var(--success);">
+                <h3>🛒 Pedido Actual</h3>
+                <div id="m-cart-display"></div>
+                <button class="btn-action btn-success" style="margin-top:15px" onclick="sendToKitchen()">ENVIAR A COCINA</button>
             </div>
         </div>
 
         <div id="panel-cocinero" class="role-content">
-            <h2>🔥 Comandas</h2>
+            <h2 style="color: var(--primary);">🔥 Comandas Pendientes</h2>
             <div id="c-orders-display"></div>
         </div>
     </div>
 
 <script>
-    // --- CONFIGURACIÓN FIREBASE (PEGA TUS DATOS AQUÍ) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBjwKWqke_cuUL885eHSv1TNwnFGyamO2s",
         authDomain: "comedorv1.firebaseapp.com",
@@ -133,38 +148,84 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
 
     let db_menu = [];
     let db_pedidos = [];
     let db_ventas = [];
     let cart = [];
+    let currentRole = "";
 
-    // --- SINCRONIZACIÓN EN TIEMPO REAL ---
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            localStorage.setItem('userCloudV6', user.email);
+        } else {
+            localStorage.removeItem('userCloudV6');
+        }
+    });
+
     db.ref('menu').on('value', snap => { db_menu = snap.val() || []; renderJefePanel(); renderMeseroMenu(); });
     db.ref('pedidos').on('value', snap => { db_pedidos = snap.val() || []; renderKitchen(); });
     db.ref('ventas').on('value', snap => { db_ventas = snap.val() || []; renderJefePanel(); });
 
-    // --- LOGIN SOLO USUARIO ---
-    function checkJefeAccess() {
-        const userSaved = localStorage.getItem('userCloud');
-        if (userSaved) { openApp('jefe'); } 
-        else { document.getElementById('role-selector').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; }
+    // NUEVA FUNCIÓN PARA MOSTRAR ID DE USUARIO
+    function showUserInfo() {
+        const user = auth.currentUser;
+        if (user) {
+            alert(`👤 Mi Perfil:\n\nEmail: ${user.email}\nID de Acceso: ${user.uid}`);
+        } else {
+            alert("No hay una sesión de Firebase activa en este momento.");
+        }
     }
 
-    function handleAuth() {
-        const u = document.getElementById('user-auth').value;
-        const remember = document.getElementById('remember-me').checked;
-        if(!u) return alert("Escribe un nombre de usuario");
-        if(remember) localStorage.setItem('userCloud', u);
-        openApp('jefe');
-    }
+    function contactSupport() { alert("📞 Soporte Técnico\nLlamar al: 55616144"); }
 
-    function logout() { localStorage.removeItem('userCloud'); location.reload(); }
+    function reportBug() {
+        const errorMsg = prompt("Describa el error encontrado:");
+        if (errorMsg) {
+            db.ref('reportes').push({
+                usuario: localStorage.getItem('userCloudV6') || "Anónimo",
+                mensaje: errorMsg,
+                fecha: new Date().toLocaleString(),
+                pantalla: currentRole || "Inicio"
+            });
+            alert("Reporte enviado correctamente.");
+        }
+    }
 
     function toggleSupport(e) { e.stopPropagation(); const d = document.getElementById('support-dropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
     function closeDropdowns() { document.getElementById('support-dropdown').style.display = 'none'; }
 
+    function checkJefeAccess() {
+        const user = auth.currentUser;
+        if (user) { openApp('jefe'); } 
+        else { 
+            document.getElementById('role-selector').style.display = 'none'; 
+            document.getElementById('login-screen').style.display = 'flex'; 
+        }
+    }
+    
+    async function handleAuth() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if(!email || !password) return alert("Completa todos los datos");
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+            openApp('jefe');
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+    
+    function logout() { 
+        auth.signOut().then(() => {
+            localStorage.removeItem('userCloudV6');
+            location.reload(); 
+        });
+    }
+
     function openApp(role) {
+        currentRole = role;
         document.getElementById('role-selector').style.display = 'none';
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
@@ -172,37 +233,51 @@
         document.querySelectorAll('.role-content').forEach(x => x.style.display = 'none');
         document.getElementById('panel-' + role).style.display = 'block';
         document.getElementById('dots-btn').style.color = '#1a2a6c';
+        
+        if(role === 'mesero') renderMeseroMenu();
+        if(role === 'jefe') renderJefePanel();
+        if(role === 'cocinero') renderKitchen();
     }
 
     function closeApp() { location.reload(); }
 
-    // --- ACCIONES NUBE ---
     function addMenuJefe() {
         const n = document.getElementById('j-nombre').value;
         const p = parseFloat(document.getElementById('j-precio').value);
         const c = document.getElementById('j-categoria').value;
-        if(n && p) {
-            const newProd = {id: Date.now(), nombre: n, precio: p, categoria: c};
-            db_menu.push(newProd);
+        if(n && !isNaN(p)) {
+            db_menu.push({id: Date.now(), nombre: n, precio: p, categoria: c});
             db.ref('menu').set(db_menu);
             document.getElementById('j-nombre').value = ""; document.getElementById('j-precio').value = "";
         }
     }
 
     function deleteProduct(id) {
-        if(confirm("¿Eliminar?")) {
-            db_menu = db_menu.filter(x => x.id !== id);
-            db.ref('menu').set(db_menu);
-        }
+        if(confirm("¿Eliminar?")) { db_menu = db_menu.filter(x => x.id !== id); db.ref('menu').set(db_menu); }
     }
 
+    function editPrice(id) {
+        const item = db_menu.find(x => x.id === id);
+        const newPrice = parseFloat(prompt("Nuevo precio Q:", item.precio));
+        if(!isNaN(newPrice)) { item.precio = newPrice; db.ref('menu').set(db_menu); }
+    }
+
+    function deleteSale(idx) {
+        if(confirm("¿Eliminar registro?")) { db_ventas.splice(idx, 1); db.ref('ventas').set(db_ventas); }
+    }
+
+    function clearAllSales() { if(confirm("¿Reiniciar caja?")) db.ref('ventas').set([]); }
+    
     function renderJefePanel() {
         const list = document.getElementById('j-menu-list-container');
-        list.innerHTML = db_menu.map(i => `<div class="admin-item-card"><div><strong>${i.nombre}</strong><br>Q${i.precio}</div><button onclick="deleteProduct(${i.id})">🗑️</button></div>`).join("");
-        
+        list.innerHTML = db_menu.map(i => `<div class="admin-item-card"><div><strong>${i.nombre}</strong><br><small>Q${i.precio.toFixed(2)} - ${i.categoria}</small></div><div><button class="btn-edit" onclick="editPrice(${i.id})">✏️</button><button class="btn-delete" onclick="deleteProduct(${i.id})">🗑️</button></div></div>`).join("");
         let total = 0;
         const hist = document.getElementById('j-historial');
-        hist.innerHTML = db_ventas.map(v => { total += v.total; return `<div class="sale-card">Mesa ${v.mesa} <span>Q${v.total}</span></div>` }).join("");
+        hist.innerHTML = db_ventas.length ? "" : "Vacío.";
+        db_ventas.slice().reverse().forEach((v, idx) => {
+            total += v.total;
+            hist.innerHTML += `<div class="sale-card"><div><strong>MESA #${v.mesa}</strong><br><small>${v.items.map(i => i.cantidad+'x '+i.nombre).join(", ")}</small></div><div style="text-align:right"><span style="color:var(--success); font-weight:600">Q${v.total.toFixed(2)}</span><br><button onclick="deleteSale(${db_ventas.length-1-idx})" style="border:none; background:none; color:var(--danger); cursor:pointer; font-size:0.7rem;">Borrar</button></div></div>`;
+        });
         document.getElementById('grandTotalDisplay').innerText = "Q" + total.toFixed(2);
     }
 
@@ -210,27 +285,30 @@
         const cont = document.getElementById('m-menu-display');
         cont.innerHTML = ["Comidas", "Bebidas", "Postres"].map(cat => {
             const items = db_menu.filter(x => x.categoria === cat);
-            return items.length ? `<div class="category-header">${cat}</div><div class="menu-grid">` + items.map(i => `<div class="menu-item"><strong>${i.nombre}</strong><br>Q${i.precio}<br><button onclick="addToCart('${i.nombre}', ${i.precio})">+ Add</button></div>`).join("") + `</div>` : "";
+            return items.length ? `<div class="category-header">${cat}</div><div class="menu-grid">` + items.map(i => `<div class="menu-item"><strong>${i.nombre}</strong><br>Q${i.precio.toFixed(2)}<br><button class="btn-action btn-primary" style="padding:5px; margin-top:5px; font-size:0.8rem;" onclick="addToCart('${i.nombre}', ${i.precio})">+ AGREGAR</button></div>`).join("") + `</div>` : "";
         }).join("");
     }
 
     function addToCart(nombre, precio) {
         const ex = cart.find(x => x.nombre === nombre);
         if(ex) ex.cantidad++; else cart.push({nombre, precio, cantidad: 1});
-        document.getElementById('m-cart-display').innerHTML = cart.map(i => `<div>${i.cantidad}x ${i.nombre}</div>`).join("");
+        document.getElementById('m-cart-display').innerHTML = cart.map(i => `<div><span class="qty-badge">${i.cantidad}</span> ${i.nombre}</div>`).join("");
     }
 
     function sendToKitchen() {
         const m = document.getElementById('m-mesa').value;
-        if(!m || !cart.length) return alert("Error");
+        if(!m || !cart.length) return alert("Faltan datos");
         db_pedidos.push({id: Date.now(), mesa: m, items: [...cart], total: cart.reduce((a,b)=>a+(b.precio*b.cantidad), 0)});
         db.ref('pedidos').set(db_pedidos);
-        cart = []; document.getElementById('m-mesa').value = "";
+        cart = []; document.getElementById('m-mesa').value = ""; document.getElementById('m-cart-display').innerHTML = "";
     }
 
     function renderKitchen() {
         const cont = document.getElementById('c-orders-display');
-        cont.innerHTML = db_pedidos.map(p => `<div class="card"><h3>MESA #${p.mesa}</h3><ul>${p.items.map(i => `<li>${i.cantidad}x ${i.nombre}</li>`).join("")}</ul><button class="btn-action btn-success" onclick="finishOrder(${p.id})">LISTO ✅</button></div>`).join("");
+        cont.innerHTML = db_pedidos.length ? "" : "Sin pedidos.";
+        db_pedidos.forEach(p => {
+            cont.innerHTML += `<div class="card" style="border-left:10px solid var(--accent);"><h2>MESA #${p.mesa}</h2><ul style="list-style:none; padding:0;">${p.items.map(i => `<li><strong>${i.cantidad}x</strong> ${i.nombre}</li>`).join("")}</ul><button class="btn-action btn-success" onclick="finishOrder(${p.id})">COMPLETADO ✅</button></div>`;
+        });
     }
 
     function finishOrder(id) {
