@@ -45,10 +45,10 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
 
+        .category-title { background: var(--accent); color: white; padding: 8px 15px; border-radius: 10px; display: inline-block; margin: 15px 0 10px; font-weight: 600; font-size: 0.9rem; }
+        .qty-circle { background: var(--primary); color: white; width: 25px; height: 25px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 600; font-size: 0.8rem; margin-right: 10px; }
+
         .admin-item-card { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #eee; }
-        .category-header { background: #e9ecef; padding: 10px 20px; border-radius: 10px; margin: 20px 0 10px; font-weight: 600; border-left: 5px solid var(--accent); }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .menu-item { background: #fff; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
         .sale-card { border-left: 8px solid var(--success); display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
     </style>
 </head>
@@ -67,18 +67,17 @@
         <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px;">SaborPro Elite</h1>
         <div class="roles-container">
             <div class="role-card" onclick="checkAuthAccess('jefe')"><i>👨‍💼</i><span>Panel Jefe</span></div>
-            <div class="role-card" onclick="checkAuthAccess('mesero')"><i>🏃</i><span>Panel Mesero</span></div>
-            <div class="role-card" onclick="checkAuthAccess('cocinero')"><i>👨‍🍳</i><span>Panel Cocina</span></div>
+            <div class="role-card" onclick="openApp('mesero')"><i>🏃</i><span>Panel Mesero</span></div>
+            <div class="role-card" onclick="openApp('cocinero')"><i>👨‍🍳</i><span>Panel Cocina</span></div>
         </div>
     </div>
 
     <div id="login-screen" style="display:none">
         <div class="card" style="width: 320px;">
-            <h2 id="login-title">Acceso SaborPro</h2>
+            <h2 id="login-title">Acceso Jefe</h2>
             <input type="email" id="auth-email" placeholder="Correo electrónico">
             <input type="password" id="auth-password" placeholder="Contraseña">
             <button class="btn-action btn-primary" onclick="handleAuth()">Ingresar</button>
-            <p id="auth-info" style="font-size: 0.7rem; color: #888; margin-top: 10px;">Si el correo no existe, se creará una cuenta nueva.</p>
             <button class="btn-action" style="background:none; color:#666; margin-top:5px;" onclick="closeApp()">Regresar</button>
         </div>
     </div>
@@ -145,16 +144,16 @@
 
     let db_menu = [], db_pedidos = [], db_ventas = [], cart = [];
     let currentRole = "";
-    let userPath = ""; // Ruta dinámica según el usuario
+    let userPath = ""; 
 
     auth.onAuthStateChanged((user) => {
         if (user) {
-            // CADA USUARIO TIENE SU PROPIA CARPETA
             userPath = `usuarios/${user.uid}/`;
-            localStorage.setItem('userCloudV6', user.email);
+            localStorage.setItem('SaborPro_LastUID', user.uid); 
             activarEscuchadores();
         } else {
-            userPath = "";
+            const lastUID = localStorage.getItem('SaborPro_LastUID');
+            if(lastUID) { userPath = `usuarios/${lastUID}/`; activarEscuchadores(); }
         }
     });
 
@@ -165,48 +164,65 @@
         db.ref(userPath + 'ventas').on('value', snap => { db_ventas = snap.val() || []; renderJefePanel(); });
     }
 
-    // --- ACCESO Y SEGURIDAD ---
-    let pendingRole = "";
     function checkAuthAccess(role) {
-        pendingRole = role;
-        if (auth.currentUser) { 
-            openApp(role); 
-        } else { 
-            document.getElementById('role-selector').style.display = 'none'; 
-            document.getElementById('login-screen').style.display = 'flex'; 
-        }
+        if (auth.currentUser) { openApp(role); } 
+        else { document.getElementById('role-selector').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; }
     }
 
     async function handleAuth() {
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
         if(!email || !password) return alert("Datos incompletos");
-
         try {
-            // Intenta loguear, si falla porque no existe, crea la cuenta (Auto-Registro)
             await auth.signInWithEmailAndPassword(email, password).catch(async (err) => {
-                if(err.code === 'auth/user-not-found') {
-                    await auth.createUserWithEmailAndPassword(email, password);
-                } else { throw err; }
+                if(err.code === 'auth/user-not-found') { await auth.createUserWithEmailAndPassword(email, password); } 
+                else { throw err; }
             });
-            openApp(pendingRole || 'mesero');
-        } catch (error) {
-            alert("Error: " + error.message);
-        }
+            openApp('jefe');
+        } catch (error) { alert("Error: " + error.message); }
     }
 
-    // --- FUNCIONES DE APP MODIFICADAS CON RUTA DE USUARIO ---
+    function openApp(role) {
+        currentRole = role;
+        document.getElementById('role-selector').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('panel-title').innerText = "SaborPro - " + role.toUpperCase();
+        document.querySelectorAll('.role-content').forEach(x => x.style.display = 'none');
+        document.getElementById('panel-' + role).style.display = 'block';
+        if(role === 'mesero') renderMeseroMenu();
+        if(role === 'cocinero') renderKitchen();
+        if(role === 'jefe') renderJefePanel();
+    }
+
     function addMenuJefe() {
         const n = document.getElementById('j-nombre').value;
         const p = parseFloat(document.getElementById('j-precio').value);
         const c = document.getElementById('j-categoria').value;
-        if(n && !isNaN(p)) {
+        if(n && !isNaN(p) && userPath) {
             db_menu.push({id: Date.now(), nombre: n, precio: p, categoria: c});
             db.ref(userPath + 'menu').set(db_menu);
             document.getElementById('j-nombre').value = ""; document.getElementById('j-precio').value = "";
         }
     }
 
+    function editProduct(id) {
+        const item = db_menu.find(x => x.id === id);
+        if(!item) return;
+        const nuevoNombre = prompt("Nuevo nombre:", item.nombre);
+        const nuevoPrecio = prompt("Nuevo precio (Q):", item.precio);
+        const nuevaCat = prompt("Categoría (Comidas, Bebidas, Postres):", item.categoria);
+        
+        if(nuevoNombre && nuevoPrecio) {
+            item.nombre = nuevoNombre;
+            item.precio = parseFloat(nuevoPrecio);
+            item.categoria = nuevaCat || item.categoria;
+            db.ref(userPath + 'menu').set(db_menu);
+        }
+    }
+
+    function deleteProduct(id) { if(confirm("¿Eliminar?")) { db_menu = db_menu.filter(x => x.id !== id); db.ref(userPath + 'menu').set(db_menu); } }
+    
     function sendToKitchen() {
         const m = document.getElementById('m-mesa').value;
         if(!m || !cart.length) return alert("Faltan datos");
@@ -224,31 +240,25 @@
     }
 
     function clearAllSales() { if(confirm("¿Reiniciar caja?")) db.ref(userPath + 'ventas').set([]); }
-    function deleteProduct(id) { if(confirm("¿Eliminar?")) { db_menu = db_menu.filter(x => x.id !== id); db.ref(userPath + 'menu').set(db_menu); } }
     function logout() { auth.signOut().then(() => location.reload()); }
-    function showUserInfo() { const u = auth.currentUser; if(u) alert(`Email: ${u.email}\nTu Carpeta: ${u.uid}`); }
-    function openApp(role) {
-        currentRole = role;
-        document.getElementById('role-selector').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('panel-title').innerText = "SaborPro - " + role.toUpperCase();
-        document.querySelectorAll('.role-content').forEach(x => x.style.display = 'none');
-        document.getElementById('panel-' + role).style.display = 'block';
-    }
     function closeApp() { location.reload(); }
     function contactSupport() { alert("Soporte: 55616144"); }
-    function reportBug() { 
-        const m = prompt("Error:"); 
-        if(m) db.ref('reportes_globales').push({user: auth.currentUser?.email, msg: m, date: new Date().toLocaleString()}); 
-    }
+    function showUserInfo() { const u = auth.currentUser; alert(u ? `Sesión Activa: ${u.email}` : "Viendo datos guardados en este equipo."); }
     function toggleSupport(e) { e.stopPropagation(); const d = document.getElementById('support-dropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
     function closeDropdowns() { document.getElementById('support-dropdown').style.display = 'none'; }
-    
-    // Renders básicos (Sin cambios de lógica, solo usan los datos locales actualizados por los escuchadores)
+    function reportBug() { const m = prompt("Error:"); if(m) db.ref('reportes').push({msg: m, date: new Date().toLocaleString()}); }
+
     function renderJefePanel() {
         const list = document.getElementById('j-menu-list-container');
-        list.innerHTML = db_menu.map(i => `<div class="admin-item-card"><div><strong>${i.nombre}</strong><br><small>Q${i.precio.toFixed(2)}</small></div><button class="btn-logout" style="padding:5px" onclick="deleteProduct(${i.id})">🗑️</button></div>`).join("");
+        list.innerHTML = db_menu.map(i => `
+            <div class="admin-item-card">
+                <div><strong>${i.nombre}</strong><br><small>Q${i.precio.toFixed(2)} - ${i.categoria}</small></div>
+                <div>
+                    <button style="padding:5px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="editProduct(${i.id})">✏️</button>
+                    <button style="padding:5px; background:var(--danger); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="deleteProduct(${i.id})">🗑️</button>
+                </div>
+            </div>
+        `).join("");
         let total = db_ventas.reduce((a,b)=>a+b.total, 0);
         document.getElementById('grandTotalDisplay').innerText = "Q" + total.toFixed(2);
         const hist = document.getElementById('j-historial');
@@ -257,18 +267,32 @@
 
     function renderMeseroMenu() {
         const cont = document.getElementById('m-menu-display');
-        cont.innerHTML = db_menu.map(i => `<div class="menu-item"><strong>${i.nombre}</strong><br>Q${i.precio.toFixed(2)}<br><button class="btn-action btn-primary" onclick="addToCart('${i.nombre}', ${i.precio})">+ AGREGAR</button></div>`).join("");
+        const categorias = ["Comidas", "Bebidas", "Postres"];
+        cont.innerHTML = categorias.map(cat => {
+            const items = db_menu.filter(i => i.categoria === cat);
+            if (!items.length) return "";
+            return `<div class="category-title">${cat.toUpperCase()}</div>` + items.map(i => `
+                <div class="card" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>${i.nombre}</strong><br>Q${i.precio.toFixed(2)}</div>
+                    <button class="btn-action btn-primary" style="width:auto; padding:5px 15px" onclick="addToCart('${i.nombre}', ${i.precio})">+ ADD</button>
+                </div>`).join("");
+        }).join("");
     }
 
     function addToCart(nombre, precio) {
         const ex = cart.find(x => x.nombre === nombre);
         if(ex) ex.cantidad++; else cart.push({nombre, precio, cantidad: 1});
-        document.getElementById('m-cart-display').innerHTML = cart.map(i => `<div>${i.cantidad}x ${i.nombre}</div>`).join("");
+        document.getElementById('m-cart-display').innerHTML = cart.map(i => `<div><span class="qty-circle" style="background:var(--success)">${i.cantidad}</span> ${i.nombre}</div>`).join("");
     }
 
     function renderKitchen() {
         const cont = document.getElementById('c-orders-display');
-        cont.innerHTML = db_pedidos.map(p => `<div class="card">Mesa ${p.mesa}<br>${p.items.map(i=>i.nombre).join(",")}<br><button class="btn-action btn-success" onclick="finishOrder(${p.id})">LISTO</button></div>`).join("");
+        cont.innerHTML = db_pedidos.map(p => `
+            <div class="card" style="border-left: 10px solid var(--accent)">
+                <h2 style="margin:0">MESA #${p.mesa}</h2>
+                <div style="margin:10px 0">${p.items.map(i => `<div style="font-size:1.1rem;"><span class="qty-circle">${i.cantidad}</span> <strong>${i.nombre}</strong></div>`).join("")}</div>
+                <button class="btn-action btn-success" onclick="finishOrder(${p.id})">LISTO ✅</button>
+            </div>`).join("");
     }
 </script>
 </body>
