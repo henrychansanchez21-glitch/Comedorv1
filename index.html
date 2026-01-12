@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaborPro Elite v6 - Firebase Cloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #f4f7f6; --primary: #1a2a6c; --accent: #f2a154; --success: #2ecc71;
+            --danger: #e74c3c; --white: #ffffff; --shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: var(--bg); color: #333; }
+
+        /* --- MENÚ SOPORTE --- */
+        .support-menu-container { position: fixed; top: 15px; right: 15px; z-index: 9999; }
+        .three-dots-btn { background: rgba(255,255,255,0.2); color: white; border: none; font-size: 1.8rem; cursor: pointer; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .support-dropdown { position: absolute; top: 55px; right: 0; background: white; width: 200px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow: hidden; }
+        .support-dropdown div { padding: 12px 20px; display: block; color: #333; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+
+        /* --- PANTALLAS --- */
+        #role-selector, #login-screen {
+            height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); text-align: center;
+        }
+        .roles-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .role-card { background: var(--white); padding: 30px; width: 150px; border-radius: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .role-card i { font-size: 3rem; display: block; margin-bottom: 10px; }
+
+        .app-container { display: none; padding: 20px; max-width: 1100px; margin: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; }
+
+        .card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .total-box { background: var(--primary); color: white; padding: 30px; border-radius: 25px; text-align: center; margin-bottom: 25px; }
+        .total-box p { font-size: 3rem; margin: 10px 0; font-weight: 600; color: var(--accent); }
+
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        
+        /* GESTIÓN */
+        .admin-item-card { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 10px; }
+        .category-header { background: #e9ecef; padding: 10px 20px; border-radius: 10px; margin: 20px 0 10px; font-weight: 600; border-left: 5px solid var(--accent); }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .menu-item { background: #fff; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
+        .sale-card { border-left: 8px solid var(--success); display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
+    </style>
+</head>
+<body onclick="closeDropdowns(event)">
+
+    <div class="support-menu-container">
+        <button class="three-dots-btn" id="dots-btn" onclick="toggleSupport(event)">⋮</button>
+        <div class="support-dropdown" id="support-dropdown">
+            <div onclick="alert('Llamando a soporte...')">📞 Soporte Técnico</div>
+            <div onclick="prompt('Reporte error:')">🐛 Reportar Error</div>
+            <div onclick="alert('SaborPro Cloud v6')">ℹ️ Info Versión</div>
+        </div>
+    </div>
+
+    <div id="role-selector">
+        <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px;">SaborPro Cloud</h1>
+        <div class="roles-container">
+            <div class="role-card" onclick="checkJefeAccess()"><i>👨‍💼</i><span>Panel Jefe</span></div>
+            <div class="role-card" onclick="openApp('mesero')"><i>🏃</i><span>Panel Mesero</span></div>
+            <div class="role-card" onclick="openApp('cocinero')"><i>👨‍🍳</i><span>Panel Cocina</span></div>
+        </div>
+    </div>
+
+    <div id="login-screen" style="display:none">
+        <div class="card" style="width: 320px;">
+            <h2 id="login-title">Acceso Jefe</h2>
+            <input type="text" id="user-auth" placeholder="Escribe tu Usuario">
+            <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 10px; margin: 10px 0; cursor: pointer;">
+                <input type="checkbox" id="remember-me" style="width: 18px; height: 18px;"> Recordar usuario
+            </label>
+            <button class="btn-action btn-primary" onclick="handleAuth()">Ingresar</button>
+            <button class="btn-action" style="background:none; color:#666; margin-top:5px;" onclick="closeApp()">Regresar</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="app-container">
+        <header>
+            <h2 id="panel-title" style="color:var(--primary);">PANEL</h2>
+            <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </header>
+
+        <div id="panel-jefe" class="role-content">
+            <div class="total-box"><h3 style="margin:0;">CAJA HOY</h3><p id="grandTotalDisplay">Q0.00</p></div>
+            <div class="card">
+                <h3>🍴 Nuevo Producto</h3>
+                <input type="text" id="j-nombre" placeholder="Nombre">
+                <input type="number" id="j-precio" placeholder="Precio Q">
+                <select id="j-categoria">
+                    <option value="Comidas">Comidas</option><option value="Bebidas">Bebidas</option><option value="Postres">Postres</option>
+                </select>
+                <button class="btn-action btn-primary" onclick="addMenuJefe()">Agregar</button>
+            </div>
+            <div class="card"><h3>📋 Gestión</h3><div id="j-menu-list-container"></div></div>
+            <div class="card"><h3>📊 Ventas</h3><div id="j-historial"></div></div>
+        </div>
+
+        <div id="panel-mesero" class="role-content">
+            <div class="card"><input type="number" id="m-mesa" placeholder="Mesa #"></div>
+            <div id="m-menu-display"></div>
+            <div class="card"><h3>🛒 Pedido</h3><div id="m-cart-display"></div>
+                <button class="btn-action btn-success" onclick="sendToKitchen()">ENVIAR A COCINA</button>
+            </div>
+        </div>
+
+        <div id="panel-cocinero" class="role-content">
+            <h2>🔥 Comandas</h2>
+            <div id="c-orders-display"></div>
+        </div>
+    </div>
+
+<script>
+    // --- CONFIGURACIÓN FIREBASE (PEGA TUS DATOS AQUÍ) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBjwKWqke_cuUL885eHSv1TNwnFGyamO2s",
+        authDomain: "comedorv1.firebaseapp.com",
+        databaseURL: "https://comedorv1-default-rtdb.firebaseio.com",
+        projectId: "comedorv1",
+        storageBucket: "comedorv1.firebasestorage.app",
+        messagingSenderId: "625581498462",
+        appId: "1:625581498462:web:745400c406ba0bde3c14cf"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let db_menu = [];
+    let db_pedidos = [];
+    let db_ventas = [];
+    let cart = [];
+
+    // --- SINCRONIZACIÓN EN TIEMPO REAL ---
+    db.ref('menu').on('value', snap => { db_menu = snap.val() || []; renderJefePanel(); renderMeseroMenu(); });
+    db.ref('pedidos').on('value', snap => { db_pedidos = snap.val() || []; renderKitchen(); });
+    db.ref('ventas').on('value', snap => { db_ventas = snap.val() || []; renderJefePanel(); });
+
+    // --- LOGIN SOLO USUARIO ---
+    function checkJefeAccess() {
+        const userSaved = localStorage.getItem('userCloud');
+        if (userSaved) { openApp('jefe'); } 
+        else { document.getElementById('role-selector').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; }
+    }
+
+    function handleAuth() {
+        const u = document.getElementById('user-auth').value;
+        const remember = document.getElementById('remember-me').checked;
+        if(!u) return alert("Escribe un nombre de usuario");
+        if(remember) localStorage.setItem('userCloud', u);
+        openApp('jefe');
+    }
+
+    function logout() { localStorage.removeItem('userCloud'); location.reload(); }
+
+    function toggleSupport(e) { e.stopPropagation(); const d = document.getElementById('support-dropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+    function closeDropdowns() { document.getElementById('support-dropdown').style.display = 'none'; }
+
+    function openApp(role) {
+        document.getElementById('role-selector').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('panel-title').innerText = "SaborPro - " + role.toUpperCase();
+        document.querySelectorAll('.role-content').forEach(x => x.style.display = 'none');
+        document.getElementById('panel-' + role).style.display = 'block';
+        document.getElementById('dots-btn').style.color = '#1a2a6c';
+    }
+
+    function closeApp() { location.reload(); }
+
+    // --- ACCIONES NUBE ---
+    function addMenuJefe() {
+        const n = document.getElementById('j-nombre').value;
+        const p = parseFloat(document.getElementById('j-precio').value);
+        const c = document.getElementById('j-categoria').value;
+        if(n && p) {
+            const newProd = {id: Date.now(), nombre: n, precio: p, categoria: c};
+            db_menu.push(newProd);
+            db.ref('menu').set(db_menu);
+            document.getElementById('j-nombre').value = ""; document.getElementById('j-precio').value = "";
+        }
+    }
+
+    function deleteProduct(id) {
+        if(confirm("¿Eliminar?")) {
+            db_menu = db_menu.filter(x => x.id !== id);
+            db.ref('menu').set(db_menu);
+        }
+    }
+
+    function renderJefePanel() {
+        const list = document.getElementById('j-menu-list-container');
+        list.innerHTML = db_menu.map(i => `<div class="admin-item-card"><div><strong>${i.nombre}</strong><br>Q${i.precio}</div><button onclick="deleteProduct(${i.id})">🗑️</button></div>`).join("");
+        
+        let total = 0;
+        const hist = document.getElementById('j-historial');
+        hist.innerHTML = db_ventas.map(v => { total += v.total; return `<div class="sale-card">Mesa ${v.mesa} <span>Q${v.total}</span></div>` }).join("");
+        document.getElementById('grandTotalDisplay').innerText = "Q" + total.toFixed(2);
+    }
+
+    function renderMeseroMenu() {
+        const cont = document.getElementById('m-menu-display');
+        cont.innerHTML = ["Comidas", "Bebidas", "Postres"].map(cat => {
+            const items = db_menu.filter(x => x.categoria === cat);
+            return items.length ? `<div class="category-header">${cat}</div><div class="menu-grid">` + items.map(i => `<div class="menu-item"><strong>${i.nombre}</strong><br>Q${i.precio}<br><button onclick="addToCart('${i.nombre}', ${i.precio})">+ Add</button></div>`).join("") + `</div>` : "";
+        }).join("");
+    }
+
+    function addToCart(nombre, precio) {
+        const ex = cart.find(x => x.nombre === nombre);
+        if(ex) ex.cantidad++; else cart.push({nombre, precio, cantidad: 1});
+        document.getElementById('m-cart-display').innerHTML = cart.map(i => `<div>${i.cantidad}x ${i.nombre}</div>`).join("");
+    }
+
+    function sendToKitchen() {
+        const m = document.getElementById('m-mesa').value;
+        if(!m || !cart.length) return alert("Error");
+        db_pedidos.push({id: Date.now(), mesa: m, items: [...cart], total: cart.reduce((a,b)=>a+(b.precio*b.cantidad), 0)});
+        db.ref('pedidos').set(db_pedidos);
+        cart = []; document.getElementById('m-mesa').value = "";
+    }
+
+    function renderKitchen() {
+        const cont = document.getElementById('c-orders-display');
+        cont.innerHTML = db_pedidos.map(p => `<div class="card"><h3>MESA #${p.mesa}</h3><ul>${p.items.map(i => `<li>${i.cantidad}x ${i.nombre}</li>`).join("")}</ul><button class="btn-action btn-success" onclick="finishOrder(${p.id})">LISTO ✅</button></div>`).join("");
+    }
+
+    function finishOrder(id) {
+        const idx = db_pedidos.findIndex(x => x.id === id);
+        db_ventas.push(db_pedidos[idx]);
+        db_pedidos.splice(idx, 1);
+        db.ref('ventas').set(db_ventas);
+        db.ref('pedidos').set(db_pedidos);
+    }
+</script>
+</body>
+</html>
