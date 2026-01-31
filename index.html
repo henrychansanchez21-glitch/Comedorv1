@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaborPro Elite - Multi-Tenant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SaborPro Elite V3</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -12,118 +12,124 @@
 
     <style>
         :root {
-            --bg: #f4f7f6; --primary: #1a2a6c; --accent: #f2a154; --success: #2ecc71;
-            --danger: #e74c3c; --white: #ffffff; --shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --bg: #f0f2f5; --primary: #1e293b; --accent: #f59e0b; 
+            --success: #10b981; --danger: #ef4444; --white: #ffffff; 
+            --shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
         }
-        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: var(--bg); color: #333; }
 
-        .support-menu-container { position: fixed; top: 15px; right: 15px; z-index: 9999; }
-        .three-dots-btn { background: rgba(255,255,255,0.2); color: white; border: none; font-size: 1.8rem; cursor: pointer; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .support-dropdown { position: absolute; top: 55px; right: 0; background: white; width: 220px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; overflow: hidden; }
-        .support-dropdown div { padding: 12px 20px; display: block; color: #333; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .support-dropdown div:hover { background: #f8f9fa; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: var(--bg); color: #1e293b; -webkit-tap-highlight-color: transparent; }
 
-        #role-selector, #login-screen {
-            height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); text-align: center;
+        .dark-screen {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
         }
-        .roles-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .role-card { background: var(--white); padding: 30px; width: 140px; border-radius: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-        
-        .app-container { display: none; padding: 20px; max-width: 1100px; margin: auto; animation: fadeInUp 0.5s ease; }
-        @keyframes fadeInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
-        
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; }
+        .role-card { 
+            background: rgba(255,255,255,0.1); padding: 40px; width: 85%; max-width: 320px; 
+            border-radius: 35px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+            transition: 0.3s; color: white; text-align: center; margin-bottom: 20px;
+            font-size: 1.8rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .role-card:active { transform: scale(0.95); background: var(--white); color: var(--primary); }
 
-        .card { background: var(--white); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
-        .total-box { background: var(--primary); color: white; padding: 30px; border-radius: 25px; text-align: center; margin-bottom: 25px; }
-        .total-box p { font-size: 3rem; margin: 10px 0; font-weight: 600; color: var(--accent); }
+        .login-card { background: var(--white); padding: 40px; border-radius: 35px; width: 85%; max-width: 350px; text-align: center; }
 
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: inherit; }
-        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .app-container { display: none; padding: 15px; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+        .card { background: white; border-radius: 25px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+
+        .total-box { background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 30px; border-radius: 30px; text-align: center; margin-bottom: 20px; }
+        .total-amount { font-size: 3.5rem; font-weight: 600; color: var(--accent); }
+
+        .search-bar { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        .cat-title { font-size: 1.1rem; font-weight: 600; margin: 20px 0 10px; color: var(--primary); border-left: 5px solid var(--accent); padding-left: 10px; text-transform: uppercase; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .item-card { background: white; border: 1px solid #eee; padding: 15px; border-radius: 20px; text-align: center; position: relative; }
+        .item-card.agotado { border: 2px solid var(--danger); background: #fff5f5; }
+
+        .btn-action { width: 100%; padding: 18px; border: none; border-radius: 18px; cursor: pointer; font-weight: 600; font-size: 1.1rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-entregar { background: var(--success); color: white; padding: 12px 20px; border-radius: 15px; border: none; font-weight: 600; }
+        
+        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .btn-tool { width: 35px; height: 35px; border-radius: 10px; border: none; margin-left: 5px; font-size: 1rem; }
+        
+        .hist-item { padding: 15px; border-bottom: 1px solid #eee; }
+        .hist-meta { font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+        .hist-main { display: flex; justify-content: space-between; font-weight: 600; font-size: 1.1rem; margin: 3px 0; }
+        .hist-details { font-size: 0.9rem; color: #64748b; line-height: 1.4; }
 
-        .category-title { background: var(--accent); color: white; padding: 8px 15px; border-radius: 10px; display: inline-block; margin: 15px 0 10px; font-weight: 600; font-size: 0.9rem; }
-        .qty-circle { background: var(--primary); color: white; width: 25px; height: 25px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 600; font-size: 0.8rem; margin-right: 10px; }
+        /* CONTROLES ARREGLADOS */
+        .qty-controls { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 12px 0; background: #f8fafc; padding: 8px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .qty-btn { background: var(--primary); color: white; border: none; width: 35px; height: 35px; border-radius: 10px; font-weight: bold; font-size: 1.3rem; }
+        .qty-input { width: 50px; text-align: center; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 1.1rem; background: white; color: var(--primary); padding: 4px 0; }
 
-        .admin-item-card { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #eee; }
-        .sale-card { border-left: 8px solid var(--success); display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 15px; box-sizing: border-box; font-family: inherit; }
     </style>
 </head>
-<body onclick="closeDropdowns(event)">
+<body>
 
-    <div class="support-menu-container">
-        <button class="three-dots-btn" id="dots-btn" onclick="toggleSupport(event)">⋮</button>
-        <div class="support-dropdown" id="support-dropdown">
-            <div onclick="contactSupport()">📞 Soporte Técnico</div>
-            <div onclick="reportBug()">🐛 Reportar un Error</div>
-            <div onclick="showUserInfo()">👤 Mi Usuario / ID</div>
-        </div>
+    <div id="role-selector" class="dark-screen">
+        <h1 style="color:white; margin-bottom:40px; letter-spacing: 2px;">SABORPRO ELITE</h1>
+        <div class="role-card" onclick="checkAuth('jefe')">💼 JEFE</div>
+        <div class="role-card" onclick="openApp('mesero')">🏃 MESERO</div>
+        <div class="role-card" onclick="openApp('cocinero')">🍳 COCINA</div>
     </div>
 
-    <div id="role-selector">
-        <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px;">SaborPro Elite</h1>
-        <div class="roles-container">
-            <div class="role-card" onclick="checkAuthAccess('jefe')"><i>👨‍💼</i><span>Panel Jefe</span></div>
-            <div class="role-card" onclick="openApp('mesero')"><i>🏃</i><span>Panel Mesero</span></div>
-            <div class="role-card" onclick="openApp('cocinero')"><i>👨‍🍳</i><span>Panel Cocina</span></div>
-        </div>
-    </div>
-
-    <div id="login-screen" style="display:none">
-        <div class="card" style="width: 320px;">
-            <h2 id="login-title">Acceso Jefe</h2>
-            <input type="email" id="auth-email" placeholder="Correo electrónico">
-            <input type="password" id="auth-password" placeholder="Contraseña">
-            <button class="btn-action btn-primary" onclick="handleAuth()">Ingresar</button>
-            <button class="btn-action" style="background:none; color:#666; margin-top:5px;" onclick="closeApp()">Regresar</button>
+    <div id="login-screen" class="dark-screen" style="display:none">
+        <div class="login-card">
+            <h2 style="margin-bottom:20px">Acceso Privado</h2>
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="pass" placeholder="Contraseña">
+            <button class="btn-action btn-primary" onclick="login()">ENTRAR</button>
+            <button onclick="location.reload()" style="background:none; border:none; color:#888; margin-top:20px">← VOLVER</button>
         </div>
     </div>
 
     <div id="main-app" class="app-container">
-        <header>
-            <h2 id="panel-title" style="color:var(--primary); font-weight:600; margin:0;">PANEL</h2>
-            <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px">
+            <h2 id="title" style="margin:0; font-weight: 600;">PANEL</h2>
+            <button onclick="location.reload()" style="background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:15px; font-weight: 600;">SALIR</button>
         </header>
 
-        <div id="panel-jefe" class="role-content">
+        <div id="panel-jefe" style="display:none">
             <div class="total-box">
-                <h3 style="margin:0; opacity:0.9; font-weight:300;">RECAUDACIÓN DEL DÍA</h3>
-                <p id="grandTotalDisplay">Q0.00</p>
-                <button onclick="clearAllSales()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 15px; border-radius:8px; cursor:pointer; font-size: 0.8rem;">Reiniciar Caja</button>
+                <small style="opacity: 0.8; letter-spacing: 1px;">TOTAL CAJA HOY</small>
+                <div id="total-caja" class="total-amount">Q0.00</div>
+                <button onclick="reiniciarCaja()" style="background:none; color:white; border:1px solid rgba(255,255,255,0.4); padding:8px 15px; border-radius:12px; margin-top:10px">Reiniciar Caja</button>
             </div>
             <div class="card">
-                <h3>🍴 Nuevo Producto</h3>
-                <input type="text" id="j-nombre" placeholder="Nombre">
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="j-precio" placeholder="Precio Q">
-                    <select id="j-categoria">
-                        <option value="Comidas">Comidas</option>
-                        <option value="Bebidas">Bebidas</option>
-                        <option value="Postres">Postres</option>
-                    </select>
-                </div>
-                <button class="btn-action btn-primary" onclick="addMenuJefe()" style="margin-top: 10px;">Agregar al Menú</button>
+                <h3>📋 Historial de Ventas</h3>
+                <div id="historial-ventas"></div>
             </div>
-            <div class="card"><h3>📋 Gestión del Menú</h3><div id="j-menu-list-container"></div></div>
-            <div class="card"><h3>📊 Historial de Ventas</h3><div id="j-historial"></div></div>
-        </div>
-
-        <div id="panel-mesero" class="role-content">
-            <div class="card"><input type="number" id="m-mesa" placeholder="Mesa #"></div>
-            <div id="m-menu-display"></div>
-            <div class="card" style="margin-top:20px; border-top: 5px solid var(--success);">
-                <h3>🛒 Pedido Actual</h3>
-                <div id="m-cart-display"></div>
-                <button class="btn-action btn-success" style="margin-top:15px" onclick="sendToKitchen()">ENVIAR A COCINA</button>
+            <div class="card">
+                <h3>🍴 Gestionar Menú</h3>
+                <input type="text" id="n" placeholder="Nombre del plato">
+                <input type="number" id="p" placeholder="Precio Q">
+                <select id="c"><option>Comidas</option><option>Bebidas</option><option>Postres</option></select>
+                <button class="btn-action btn-primary" onclick="addMenu()">+ AGREGAR PRODUCTO</button>
+                <div id="admin-menu-list" style="margin-top:20px"></div>
             </div>
         </div>
 
-        <div id="panel-cocinero" class="role-content">
-            <h2 style="color: var(--primary);">🔥 Comandas Pendientes</h2>
-            <div id="c-orders-display"></div>
+        <div id="panel-mesero" style="display:none">
+            <div id="notificaciones"></div>
+            <input type="text" id="searchMenu" class="search-bar" placeholder="🔍 Buscar plato..." onkeyup="updateUI()">
+            <div class="card" style="padding: 15px;">
+                <b>Mesa #:</b> <input type="number" id="mesa" style="width:80px; margin:0; padding:10px; display:inline-block">
+            </div>
+            <div id="mesero-menu-display"></div>
+            <div class="card" style="border-top: 10px solid var(--success)">
+                <h3>🛒 Pedido</h3>
+                <div id="cart-list" style="margin-bottom:15px"></div>
+                <button class="btn-action btn-success" onclick="sendToKitchen()">ENVIAR A COCINA</button>
+            </div>
+        </div>
+
+        <div id="panel-cocinero" style="display:none">
+            <div id="kitchen-display"></div>
         </div>
     </div>
 
@@ -137,163 +143,190 @@
         messagingSenderId: "625581498462",
         appId: "1:625581498462:web:745400c406ba0bde3c14cf"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let db_menu = [], db_pedidos = [], db_ventas = [], cart = [];
-    let currentRole = "";
-    let userPath = ""; 
+    let userPath = "", db_menu = [], pedidos = [], ventas = [], cart = [];
 
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            userPath = `usuarios/${user.uid}/`;
-            localStorage.setItem('SaborPro_LastUID', user.uid); 
-            activarEscuchadores();
+    auth.onAuthStateChanged(user => {
+        if(user) { 
+            userPath = `usuarios/${user.uid}/`; 
+            localStorage.setItem('lastUID', user.uid);
+            iniciarApp(); 
         } else {
-            const lastUID = localStorage.getItem('SaborPro_LastUID');
-            if(lastUID) { userPath = `usuarios/${lastUID}/`; activarEscuchadores(); }
+            const id = localStorage.getItem('lastUID');
+            if(id) { userPath = `usuarios/${id}/`; iniciarApp(); }
         }
     });
 
-    function activarEscuchadores() {
+    function iniciarApp() {
         if(!userPath) return;
-        db.ref(userPath + 'menu').on('value', snap => { db_menu = snap.val() || []; renderJefePanel(); renderMeseroMenu(); });
-        db.ref(userPath + 'pedidos').on('value', snap => { db_pedidos = snap.val() || []; renderKitchen(); });
-        db.ref(userPath + 'ventas').on('value', snap => { db_ventas = snap.val() || []; renderJefePanel(); });
+        db.ref(userPath + 'menu').on('value', s => { db_menu = s.val() || []; updateUI(); });
+        db.ref(userPath + 'pedidos').on('value', s => { pedidos = s.val() || []; updateUI(); });
+        db.ref(userPath + 'ventas').on('value', s => { ventas = s.val() || []; updateUI(); });
     }
 
-    function checkAuthAccess(role) {
-        if (auth.currentUser) { openApp(role); } 
-        else { document.getElementById('role-selector').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; }
+    function checkAuth(r) {
+        if(auth.currentUser) openApp(r);
+        else { document.getElementById('role-selector').style.display='none'; document.getElementById('login-screen').style.display='flex'; }
     }
 
-    async function handleAuth() {
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-        if(!email || !password) return alert("Datos incompletos");
-        try {
-            await auth.signInWithEmailAndPassword(email, password).catch(async (err) => {
-                if(err.code === 'auth/user-not-found') { await auth.createUserWithEmailAndPassword(email, password); } 
-                else { throw err; }
-            });
-            openApp('jefe');
-        } catch (error) { alert("Error: " + error.message); }
+    async function login() {
+        const e = document.getElementById('email').value, p = document.getElementById('pass').value;
+        try { await auth.signInWithEmailAndPassword(e, p).catch(() => auth.createUserWithEmailAndPassword(e, p)); openApp('jefe'); } catch(err) { alert("Error"); }
     }
 
-    function openApp(role) {
-        currentRole = role;
-        document.getElementById('role-selector').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('panel-title').innerText = "SaborPro - " + role.toUpperCase();
-        document.querySelectorAll('.role-content').forEach(x => x.style.display = 'none');
-        document.getElementById('panel-' + role).style.display = 'block';
-        if(role === 'mesero') renderMeseroMenu();
-        if(role === 'cocinero') renderKitchen();
-        if(role === 'jefe') renderJefePanel();
+    function openApp(r) {
+        document.getElementById('role-selector').style.display='none';
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('main-app').style.display='block';
+        document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display='none');
+        document.getElementById('panel-'+r).style.display='block';
+        document.getElementById('title').innerText = r.toUpperCase();
+        updateUI();
     }
 
-    function addMenuJefe() {
-        const n = document.getElementById('j-nombre').value;
-        const p = parseFloat(document.getElementById('j-precio').value);
-        const c = document.getElementById('j-categoria').value;
-        if(n && !isNaN(p) && userPath) {
-            db_menu.push({id: Date.now(), nombre: n, precio: p, categoria: c});
-            db.ref(userPath + 'menu').set(db_menu);
-            document.getElementById('j-nombre').value = ""; document.getElementById('j-precio').value = "";
+    function updateUI() {
+        const totalVentas = ventas.reduce((acc, v) => acc + (v.total || 0), 0);
+        if(document.getElementById('total-caja')) 
+            document.getElementById('total-caja').innerText = "Q" + totalVentas.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+        const hist = document.getElementById('historial-ventas');
+        if(hist) {
+            hist.innerHTML = ventas.length ? ventas.map(v => `
+                <div class="hist-item">
+                    <div class="hist-meta">🕒 ${v.hora || '--:--'}</div>
+                    <div class="hist-main"><span>Mesa #${v.mesa}</span><span style="color:var(--success)">Q${v.total.toFixed(2)}</span></div>
+                    <div class="hist-details">${v.items.map(i => `<b>${i.qty}x</b> ${i.nombre}`).join(", ")}</div>
+                </div>`).reverse().join("") : "<p>No hay ventas.</p>";
         }
-    }
 
-    function editProduct(id) {
-        const item = db_menu.find(x => x.id === id);
-        if(!item) return;
-        const nuevoNombre = prompt("Nuevo nombre:", item.nombre);
-        const nuevoPrecio = prompt("Nuevo precio (Q):", item.precio);
-        const nuevaCat = prompt("Categoría (Comidas, Bebidas, Postres):", item.categoria);
-        
-        if(nuevoNombre && nuevoPrecio) {
-            item.nombre = nuevoNombre;
-            item.precio = parseFloat(nuevoPrecio);
-            item.categoria = nuevaCat || item.categoria;
-            db.ref(userPath + 'menu').set(db_menu);
-        }
-    }
-
-    function deleteProduct(id) { if(confirm("¿Eliminar?")) { db_menu = db_menu.filter(x => x.id !== id); db.ref(userPath + 'menu').set(db_menu); } }
-    
-    function sendToKitchen() {
-        const m = document.getElementById('m-mesa').value;
-        if(!m || !cart.length) return alert("Faltan datos");
-        db_pedidos.push({id: Date.now(), mesa: m, items: [...cart], total: cart.reduce((a,b)=>a+(b.precio*b.cantidad), 0)});
-        db.ref(userPath + 'pedidos').set(db_pedidos);
-        cart = []; document.getElementById('m-mesa').value = ""; document.getElementById('m-cart-display').innerHTML = "";
-    }
-
-    function finishOrder(id) {
-        const idx = db_pedidos.findIndex(x => x.id === id);
-        db_ventas.push(db_pedidos[idx]);
-        db_pedidos.splice(idx, 1);
-        db.ref(userPath + 'ventas').set(db_ventas);
-        db.ref(userPath + 'pedidos').set(db_pedidos);
-    }
-
-    function clearAllSales() { if(confirm("¿Reiniciar caja?")) db.ref(userPath + 'ventas').set([]); }
-    function logout() { auth.signOut().then(() => location.reload()); }
-    function closeApp() { location.reload(); }
-    function contactSupport() { alert("Soporte: 55616144"); }
-    function showUserInfo() { const u = auth.currentUser; alert(u ? `Sesión Activa: ${u.email}` : "Viendo datos guardados en este equipo."); }
-    function toggleSupport(e) { e.stopPropagation(); const d = document.getElementById('support-dropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-    function closeDropdowns() { document.getElementById('support-dropdown').style.display = 'none'; }
-    function reportBug() { const m = prompt("Error:"); if(m) db.ref('reportes').push({msg: m, date: new Date().toLocaleString()}); }
-
-    function renderJefePanel() {
-        const list = document.getElementById('j-menu-list-container');
-        list.innerHTML = db_menu.map(i => `
-            <div class="admin-item-card">
-                <div><strong>${i.nombre}</strong><br><small>Q${i.precio.toFixed(2)} - ${i.categoria}</small></div>
-                <div>
-                    <button style="padding:5px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="editProduct(${i.id})">✏️</button>
-                    <button style="padding:5px; background:var(--danger); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="deleteProduct(${i.id})">🗑️</button>
-                </div>
-            </div>
-        `).join("");
-        let total = db_ventas.reduce((a,b)=>a+b.total, 0);
-        document.getElementById('grandTotalDisplay').innerText = "Q" + total.toFixed(2);
-        const hist = document.getElementById('j-historial');
-        hist.innerHTML = db_ventas.map(v => `<div class="sale-card">Mesa ${v.mesa} - Q${v.total.toFixed(2)}</div>`).join("");
-    }
-
-    function renderMeseroMenu() {
-        const cont = document.getElementById('m-menu-display');
-        const categorias = ["Comidas", "Bebidas", "Postres"];
-        cont.innerHTML = categorias.map(cat => {
-            const items = db_menu.filter(i => i.categoria === cat);
-            if (!items.length) return "";
-            return `<div class="category-title">${cat.toUpperCase()}</div>` + items.map(i => `
-                <div class="card" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><strong>${i.nombre}</strong><br>Q${i.precio.toFixed(2)}</div>
-                    <button class="btn-action btn-primary" style="width:auto; padding:5px 15px" onclick="addToCart('${i.nombre}', ${i.precio})">+ ADD</button>
+        const adminList = document.getElementById('admin-menu-list');
+        if(adminList) {
+            adminList.innerHTML = db_menu.map(i => `
+                <div class="admin-item">
+                    <span><strong>${i.nombre}</strong><br><small>Q${i.precio.toFixed(2)}</small></span>
+                    <div>
+                        <button class="btn-tool" style="background:${i.disponible !== false ? 'var(--success)' : 'var(--danger)'}; color:white; width:auto; padding:0 8px; font-size:0.7rem" onclick="toggleStock('${i.id}')">
+                            ${i.disponible !== false ? 'HAY' : 'NO'}
+                        </button>
+                        <button class="btn-tool" style="background:#eee" onclick="editProduct('${i.id}', '${i.nombre}', ${i.precio})">✏️</button>
+                        <button class="btn-tool" style="background:#ffebee; color:var(--danger)" onclick="deleteProduct('${i.id}')">🗑️</button>
+                    </div>
                 </div>`).join("");
-        }).join("");
-    }
+        }
 
-    function addToCart(nombre, precio) {
-        const ex = cart.find(x => x.nombre === nombre);
-        if(ex) ex.cantidad++; else cart.push({nombre, precio, cantidad: 1});
-        document.getElementById('m-cart-display').innerHTML = cart.map(i => `<div><span class="qty-circle" style="background:var(--success)">${i.cantidad}</span> ${i.nombre}</div>`).join("");
-    }
+        const meseroDiv = document.getElementById('mesero-menu-display');
+        const search = document.getElementById('searchMenu')?.value.toLowerCase() || "";
+        if(meseroDiv) {
+            const cats = ["Comidas", "Bebidas", "Postres"];
+            meseroDiv.innerHTML = cats.map(cat => {
+                const items = db_menu.filter(i => i.categoria === cat && i.nombre.toLowerCase().includes(search));
+                if(!items.length) return "";
+                return `<div class="cat-title">${cat}</div><div class="menu-grid">` + items.map(i => {
+                    const isAgotado = i.disponible === false;
+                    return `
+                    <div class="item-card ${isAgotado ? 'agotado' : ''}">
+                        <strong>${i.nombre}</strong><br><small>Q${i.precio}</small>
+                        ${!isAgotado ? `
+                            <div class="qty-controls">
+                                <button class="qty-btn" onclick="changeQty('qty-${i.id}', -1)">-</button>
+                                <input type="number" id="qty-${i.id}" class="qty-input" value="1">
+                                <button class="qty-btn" onclick="changeQty('qty-${i.id}', 1)">+</button>
+                            </div>
+                            <button class="btn-action btn-primary" style="padding:10px; font-size:0.9rem; border-radius:12px;" onclick="toCart('${i.id}','${i.nombre}',${i.precio})">AGREGAR</button>
+                        ` : `<div style="color:var(--danger); font-weight:bold; margin-top:15px; font-size:0.8rem">AGOTADO</div>`}
+                    </div>`;
+                }).join("") + `</div>`;
+            }).join("");
+        }
 
-    function renderKitchen() {
-        const cont = document.getElementById('c-orders-display');
-        cont.innerHTML = db_pedidos.map(p => `
-            <div class="card" style="border-left: 10px solid var(--accent)">
-                <h2 style="margin:0">MESA #${p.mesa}</h2>
-                <div style="margin:10px 0">${p.items.map(i => `<div style="font-size:1.1rem;"><span class="qty-circle">${i.cantidad}</span> <strong>${i.nombre}</strong></div>`).join("")}</div>
-                <button class="btn-action btn-success" onclick="finishOrder(${p.id})">LISTO ✅</button>
+        const kitch = document.getElementById('kitchen-display');
+        if(kitch) kitch.innerHTML = pedidos.filter(p => p.estado === 'pendiente').map(p => `<div class="card"><h3>Mesa #${p.mesa}</h3>${p.items.map(i => `<div><b>${i.qty}x</b> ${i.nombre}</div>`).join("")}<button class="btn-action btn-success" style="margin-top:15px" onclick="marcarListo(${p.id})">LISTO ✅</button></div>`).join("");
+        
+        const notif = document.getElementById('notificaciones');
+        if(notif) notif.innerHTML = pedidos.filter(p => p.estado === 'listo').map(p => `
+            <div class="card" style="border:3px solid var(--success); display:flex; justify-content:space-between; align-items:center; padding:15px">
+                <span>🔔 Mesa #${p.mesa} LISTA</span>
+                <button class="btn-entregar" onclick="entregar(${p.id})">ENTREGAR</button>
             </div>`).join("");
     }
+
+    function changeQty(id, delta) {
+        const inp = document.getElementById(id);
+        if(!inp) return;
+        let v = parseInt(inp.value) + delta;
+        if(v < 1) v = 1;
+        inp.value = v;
+    }
+
+    function toCart(id, n, p) {
+        const inp = document.getElementById('qty-'+id);
+        const qty = inp ? parseInt(inp.value) : 1;
+        if(isNaN(qty) || qty < 1) return;
+        const ex = cart.find(x => x.nombre === n);
+        if(ex) ex.qty += qty; else cart.push({nombre:n, precio:p, qty});
+        if(inp) inp.value = 1;
+        document.getElementById('cart-list').innerHTML = cart.map(i => `<div style="padding:5px 0"><b>${i.qty}x</b> ${i.nombre}</div>`).join("");
+    }
+
+    function addMenu() {
+        const n = document.getElementById('n').value, p = parseFloat(document.getElementById('p').value), c = document.getElementById('c').value;
+        if(n && !isNaN(p)) {
+            db_menu.push({id: String(Date.now()), nombre: n, precio: p, categoria: c, disponible: true});
+            db.ref(userPath+'menu').set(db_menu);
+            document.getElementById('n').value = ""; document.getElementById('p').value = "";
+        }
+    }
+
+    function editProduct(id, oldN, oldP) {
+        const newN = prompt("Nuevo nombre:", oldN);
+        const newP = parseFloat(prompt("Nuevo precio:", oldP));
+        if(newN && !isNaN(newP)) {
+            const idx = db_menu.findIndex(i => String(i.id) === String(id));
+            db_menu[idx].nombre = newN; db_menu[idx].precio = newP;
+            db.ref(userPath+'menu').set(db_menu);
+        }
+    }
+
+    function toggleStock(id) {
+        const idx = db_menu.findIndex(i => String(i.id) === String(id));
+        db_menu[idx].disponible = (db_menu[idx].disponible !== false) ? false : true;
+        db.ref(userPath+'menu').set(db_menu);
+    }
+
+    function deleteProduct(id) {
+        if(confirm("¿Eliminar?")) {
+            db_menu = db_menu.filter(i => String(i.id) !== String(id));
+            db.ref(userPath+'menu').set(db_menu);
+        }
+    }
+
+    function sendToKitchen() {
+        const m = document.getElementById('mesa').value;
+        if(!m || !cart.length) return alert("Mesa o pedido vacío");
+        pedidos.push({id: Date.now(), mesa: m, items: [...cart], total: cart.reduce((a,b)=>a+(b.precio*b.qty),0), estado: 'pendiente'});
+        db.ref(userPath+'pedidos').set(pedidos);
+        cart = []; document.getElementById('cart-list').innerHTML=""; document.getElementById('mesa').value="";
+    }
+
+    function marcarListo(id) { 
+        const i = pedidos.findIndex(x => x.id === id); 
+        pedidos[i].estado = 'listo'; db.ref(userPath+'pedidos').set(pedidos); 
+    }
+
+    function entregar(id) {
+        const i = pedidos.findIndex(x => x.id === id);
+        const t = new Date();
+        const hora = t.getHours() + ":" + (t.getMinutes() < 10 ? '0' : '') + t.getMinutes();
+        const v = {...pedidos[i], hora: hora};
+        ventas.push(v); pedidos.splice(i, 1);
+        db.ref(userPath+'pedidos').set(pedidos); db.ref(userPath+'ventas').set(ventas);
+    }
+
+    function reiniciarCaja() { if(confirm("¿Reiniciar?")) db.ref(userPath+'ventas').set([]); }
 </script>
 </body>
 </html>
+    
